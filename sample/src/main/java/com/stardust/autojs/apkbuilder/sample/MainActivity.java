@@ -10,23 +10,10 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.stardust.autojs.apkbuilder.ApkBuilder;
-import com.stardust.autojs.apkbuilder.ApkPackager;
-import com.stardust.autojs.apkbuilder.ManifestEditor;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
-import cn.wjdiankong.main.ParserChunkUtils;
-import cn.wjdiankong.main.XmlEditor;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -61,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void buildApk() throws Exception {
         String path = mFilePath.getText().toString();
-        File tmp = new File(getCacheDir(), "ApkBuild/");
+        File tmp = new File(Environment.getExternalStorageDirectory(), "ApkBuild/");
         tmp.mkdirs();
         build(tmp, new File(path));
     }
@@ -74,12 +61,13 @@ public class MainActivity extends AppCompatActivity {
         apkBuilder.editManifest()
                 .setVersionCode(5000)
                 .setVersionName("1.2.3")
-                .setAppName("Test")
+                .setAppName("Hello")
+                .setPackageName("com.stardust.xxx")
                 .commit();
         apkBuilder.replaceFile("assets/script.js", js.getPath())
+                .setArscPackageName("com.stardust.xxx")
                 .build()
-                .sign()
-                .cleanWorkspace();
+                .sign();
     }
 
 }

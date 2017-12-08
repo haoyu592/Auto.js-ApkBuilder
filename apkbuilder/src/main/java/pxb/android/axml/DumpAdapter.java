@@ -32,7 +32,7 @@ public class DumpAdapter extends AxmlVisitor {
     }
 
     public DumpAdapter(NodeVisitor nv) {
-        this(nv, 0, new HashMap<>());
+        this(nv, 0, new HashMap<String, String>());
     }
 
     public DumpAdapter(NodeVisitor nv, int x, Map<String, String> nses) {

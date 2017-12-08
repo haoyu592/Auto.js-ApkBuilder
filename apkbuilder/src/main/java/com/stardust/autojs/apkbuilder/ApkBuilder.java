@@ -3,12 +3,22 @@ package com.stardust.autojs.apkbuilder;
 
 import com.stardust.autojs.apkbuilder.util.StreamUtils;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
+import zhao.arsceditor.ResDecoder.ARSCDecoder;
+import zhao.arsceditor.ResDecoder.AXMLDecoder;
 
 /**
  * Created by Stardust on 2017/7/1.
@@ -21,6 +31,7 @@ public class ApkBuilder {
     private ApkPackager mApkPackager;
     private ManifestEditor mManifestEditor;
     private String mWorkspacePath;
+    private String mArscPackageName;
 
     public ApkBuilder(InputStream apkInputStream, File outApkFile, String workspacePath) {
         mOutApkFile = outApkFile;
@@ -35,7 +46,6 @@ public class ApkBuilder {
     public ApkBuilder prepare() throws IOException {
         new File(mWorkspacePath).mkdirs();
         mApkPackager.unzip();
-        mManifestEditor = new ManifestEditor(new FileInputStream(getManifestFile()));
         return this;
     }
 
@@ -43,9 +53,16 @@ public class ApkBuilder {
         return new File(mWorkspacePath, "AndroidManifest.xml");
     }
 
-    public ManifestEditor editManifest() {
+    public ManifestEditor editManifest() throws FileNotFoundException {
+        mManifestEditor = new ManifestEditor(new FileInputStream(getManifestFile()));
         return mManifestEditor;
     }
+
+    public ApkBuilder setArscPackageName(String packageName) throws IOException {
+        mArscPackageName = packageName;
+        return this;
+    }
+
 
     public ApkBuilder replaceFile(String relativePath, String newFilePath) throws IOException {
         StreamUtils.write(new FileInputStream(new File(mWorkspacePath, relativePath)),
@@ -54,8 +71,23 @@ public class ApkBuilder {
     }
 
     public ApkBuilder build() throws IOException {
-        mManifestEditor.writeTo(new FileOutputStream(getManifestFile()));
+        if (mManifestEditor != null) {
+            mManifestEditor.writeTo(new FileOutputStream(getManifestFile()));
+        }
+        if (mArscPackageName != null) {
+            buildArsc();
+        }
         return this;
+    }
+
+    private void buildArsc() throws IOException {
+        File oldArsc = new File(mWorkspacePath, "resources.arsc");
+        File newArsc = new File(mWorkspacePath, "resources.arsc.new");
+        ARSCDecoder decoder = new ARSCDecoder(new BufferedInputStream(new FileInputStream(oldArsc)), null, false);
+        FileOutputStream fos = new FileOutputStream(newArsc);
+        decoder.CloneArsc(fos, mArscPackageName, true);
+        oldArsc.delete();
+        newArsc.renameTo(oldArsc);
     }
 
     public ApkBuilder sign() throws Exception {

@@ -1,6 +1,6 @@
 package com.stardust.autojs.apkbuilder;
 
-import com.stardust.autojs.apkbuilder.util.StreamUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,11 +8,8 @@ import java.io.OutputStream;
 
 import pxb.android.StringItem;
 import pxb.android.axml.AxmlReader;
-import pxb.android.axml.AxmlVisitor;
 import pxb.android.axml.AxmlWriter;
-import pxb.android.axml.DumpAdapter;
 import pxb.android.axml.NodeVisitor;
-import pxb.android.axml.Util;
 
 /**
  * Created by Stardust on 2017/10/23.
@@ -55,10 +52,9 @@ public class ManifestEditor {
     }
 
     public ManifestEditor commit() throws IOException {
-        AxmlReader reader = new AxmlReader(StreamUtils.readAsBytes(mManifestInputStream));
-        mManifestInputStream.close();
         AxmlWriter writer = new MutableAxmlWriter();
-        reader.accept(new DumpAdapter(writer));
+        AxmlReader reader = new AxmlReader(IOUtils.readFully(mManifestInputStream, mManifestInputStream.available()));
+        reader.accept(writer);
         mManifestData = writer.toByteArray();
         return this;
     }
@@ -70,20 +66,24 @@ public class ManifestEditor {
     }
 
     public void onAttr(AxmlWriter.Attr attr) {
+        if ("package".equals(attr.name.data) && mPackageName != null && attr.value instanceof StringItem) {
+            ((StringItem) attr.value).data = mPackageName;
+            return;
+        }
         if (attr.ns == null || !NS_ANDROID.equals(attr.ns.data)) {
             return;
         }
-
         if ("versionCode".equals(attr.name.data) && mVersionCode != -1) {
             attr.value = mVersionCode;
             return;
         }
-        if ("versionName".equals(attr.name.data) && mVersionName != null) {
+        if ("versionName".equals(attr.name.data) && mVersionName != null && attr.value instanceof StringItem) {
             attr.value = new StringItem(mVersionName);
+            ((StringItem) attr.value).data = mVersionName;
             return;
         }
-        if ("label".equals(attr.name.data) && mAppName != null) {
-            attr.value = new StringItem(mAppName);
+        if ("label".equals(attr.name.data) && mAppName != null && attr.value instanceof StringItem) {
+            ((StringItem) attr.value).data = mAppName;
             return;
         }
     }
