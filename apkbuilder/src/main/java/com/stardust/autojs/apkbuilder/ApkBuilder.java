@@ -65,8 +65,8 @@ public class ApkBuilder {
 
 
     public ApkBuilder replaceFile(String relativePath, String newFilePath) throws IOException {
-        StreamUtils.write(new FileInputStream(new File(mWorkspacePath, relativePath)),
-                new FileOutputStream(newFilePath));
+        StreamUtils.write(new FileInputStream(newFilePath),
+                new FileOutputStream(new File(mWorkspacePath, relativePath)));
         return this;
     }
 
